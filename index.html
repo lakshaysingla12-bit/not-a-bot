@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f4ed">
+  <meta name="description" content="Not a Bot — The absurd, playful CAPTCHA that slowly doubts everyone, including itself. Built with GSAP for stupidhackathon.">
+  <title>Not a Bot — The CAPTCHA That Doesn't Trust You</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- GSAP & Plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollToPlugin.min.js"></script>
+  
+  <!-- Audio & Export Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  
+  <!-- App Script -->
+  <script src="script.js" defer></script>
+</head>
+<body class="mood-normal theme-playful">
+
+  <!-- Interactive Annoying Custom Cursor -->
+  <div id="custom-cursor" class="custom-cursor" aria-hidden="true">
+    <div class="cursor-pointer">👆</div>
+    <div class="cursor-label">SUSPICIOUS</div>
+  </div>
+
+  <!-- Ambient Sound / Glitch Floaters -->
+  <div id="glitch-overlay" class="glitch-overlay" aria-hidden="true"></div>
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Top Sticky Navigation & Control Bar -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-brand" id="brand-logo-trigger" title="Not a Bot (Click for secret bypass)">
+        <span class="brand-logo" aria-hidden="true">N✦B</span>
+        <div class="brand-text">
+          <span class="brand-name">Not a Bot</span>
+          <span class="brand-badge">THE CAPTCHA THAT DOUBTS YOU</span>
+        </div>
+      </div>
+
+      <!-- Chapter Slide Navigation Pills (Gated Progression with Lock States) -->
+      <nav class="slide-nav-wrapper" aria-label="Chapter Navigation">
+        <div class="slide-nav" id="slide-nav-container">
+          <button class="nav-pill active" data-slide="0" type="button" id="nav-pill-0">
+            <span class="nav-icon">01</span>
+            <span class="nav-text">Lobby</span>
+            <span class="nav-status-badge">✓</span>
+          </button>
+          <button class="nav-pill locked" data-slide="1" type="button" id="nav-pill-1" title="Locked: Complete Lobby first">
+            <span class="nav-icon">🔒</span>
+            <span class="nav-text">Image Grid</span>
+            <span class="nav-tag" id="nav-round-tag">R1</span>
+          </button>
+          <button class="nav-pill locked" data-slide="2" type="button" id="nav-pill-2" title="Locked: Complete Image Grid first">
+            <span class="nav-icon">🔒</span>
+            <span class="nav-text">Text Trial</span>
+          </button>
+          <button class="nav-pill locked" data-slide="3" type="button" id="nav-pill-3" title="Locked: Pass Text Trial first">
+            <span class="nav-icon">🔒</span>
+            <span class="nav-text">One More Time!</span>
+            <span class="nav-alert" aria-hidden="true">★</span>
+          </button>
+          <button class="nav-pill locked" data-slide="4" type="button" id="nav-pill-4" title="Locked: Complete One More Time first">
+            <span class="nav-icon">🔒</span>
+            <span class="nav-text">Vibe Lab</span>
+          </button>
+          <button class="nav-pill locked" data-slide="5" type="button" id="nav-pill-5" title="Locked: Complete Vibe Lab first">
+            <span class="nav-icon">🔒</span>
+            <span class="nav-text">Final Judgment</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Global Controls & Status -->
+      <div class="header-actions">
+        <div class="global-confidence" title="Current Humanity Confidence">
+          <span class="confidence-label">CONFIDENCE</span>
+          <strong id="global-confidence-val">97%</strong>
+        </div>
+        <button id="sound-toggle-btn" class="header-btn" type="button" aria-label="Toggle Sound Effects">
+          <span class="btn-icon">🔊</span><span class="btn-text">SFX: ON</span>
+        </button>
+        <button id="glitch-toggle-btn" class="header-btn btn-glitch" type="button" aria-label="Toggle Annoying Glitch Mode">
+          <span class="btn-icon">⚡</span><span class="btn-text">CHAOS</span>
+        </button>
+        <div class="slide-arrows">
+          <button id="prev-slide-btn" class="arrow-btn" type="button" aria-label="Previous Slide">‹</button>
+          <button id="next-slide-btn" class="arrow-btn" type="button" aria-label="Next Slide">›</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scrolling Playful Marquee Ticker -->
+    <div class="marquee-strip" aria-hidden="true">
+      <div id="marquee-track" class="marquee-track">
+        <span id="marquee-copy">OFFICIAL HUMAN ACCESS SERVICE · CHAPTER PROGRESSION ENFORCED · VERIFY EACH STAGE TO UNLOCK THE NEXT · PROVE YOU ARE NOT A TOASTER ·</span>
+        <span id="marquee-copy-dup">OFFICIAL HUMAN ACCESS SERVICE · CHAPTER PROGRESSION ENFORCED · VERIFY EACH STAGE TO UNLOCK THE NEXT · PROVE YOU ARE NOT A TOASTER ·</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Horizontal Scroll Experience Viewport -->
+  <main id="horizontal-viewport" class="horizontal-viewport">
+    <div id="horizontal-track" class="horizontal-track">
+
+      <!-- ==============================================
+           SLIDE 1: WELCOME LOBBY & BIOMETRIC CALIBRATION
+           ============================================== -->
+      <section class="slide-panel slide-lobby" id="slide-0" aria-label="Chapter 1: Welcome Lobby">
+        <div class="slide-card paper-texture">
+          <div class="sticker sticker-top-left rotate-left">✦ STAGE 01 / INTAKE</div>
+          <div class="sticker sticker-top-right rotate-right badge-alert">GATEKEEPER ACTIVE</div>
+
+          <div class="hero-header">
+            <div class="handwritten-note">"Prove yourself step-by-step. The server trusts nobody."</div>
+            <h1 class="hero-title">
+              The CAPTCHA That <br>
+              <span class="highlight-ink">Doesn't Trust You</span>
+            </h1>
+            <p class="hero-subtext">
+              Welcome to the internet's most paranoid security checkpoint. 
+              <strong>Each chapter is strictly locked until you verify the current one.</strong>
+              No shortcuts. No skipping ahead. Prove you are biological.
+            </p>
+          </div>
+
+          <div class="lobby-grid">
+            <!-- Biometric Mouse Warmup Widget -->
+            <div class="lobby-box warmup-box">
+              <div class="box-badge mono">MANDATORY PRE-CHECK 01</div>
+              <h3>Wiggle Cursor for Biological Proof</h3>
+              <p>Robots move in laser-straight lines. Jiggle your cursor inside this pad to prove organic human tremors.</p>
+              
+              <div id="mouse-sandbox" class="mouse-sandbox">
+                <canvas id="tremor-canvas" width="320" height="110"></canvas>
+                <div class="sandbox-hint" id="sandbox-hint">Draw jittery wiggles in this box!</div>
+              </div>
+
+              <div class="tremor-meter">
+                <div class="meter-labels mono">
+                  <span>MUSCLE TREMOR DETECTION</span>
+                  <strong id="tremor-val">0%</strong>
+                </div>
+                <div class="meter-bar"><span id="tremor-fill"></span></div>
+              </div>
+            </div>
+
+            <!-- Pre-Flight Rules of Paranoia -->
+            <div class="lobby-box rules-box">
+              <div class="box-badge mono">PROGRESSION PROTOCOL</div>
+              <h3>How to Unlock Chapters</h3>
+              <ul class="whimsical-list">
+                <li><span class="list-bullet">🔒</span> <strong>Tabs are locked:</strong> You must verify Chapter 1 to unlock Chapter 2, and so forth.</li>
+                <li><span class="list-bullet">📜</span> <strong>Certificates are NOT guaranteed:</strong> You may be rejected or given a temporary permit if deemed suspicious.</li>
+                <li><span class="list-bullet">🔁</span> <strong>Be prepared:</strong> Buttons will repeatedly demand: <em>"Click it one more time!"</em></li>
+              </ul>
+
+              <div class="lobby-actions">
+                <button id="lobby-start-btn" class="btn btn-primary btn-large btn-wiggle" type="button">
+                  <span id="lobby-start-label">Verify & Unlock Image Grid</span>
+                  <span class="btn-arrow" aria-hidden="true">→</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sideways-scribble" aria-hidden="true">
+            <span>✎ Verification Notice: Passing this lobby unlocks Chapter 02: Image Grid!</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 2: THE IMAGE GRID OF DESPAIR (ROUNDS 1-7)
+           ============================================== -->
+      <section class="slide-panel slide-captcha" id="slide-1" aria-label="Chapter 2: The Image Matrix">
+        <div class="slide-card paper-texture captcha-slide-card">
+          <div class="sticker sticker-top-left rotate-left badge-highlight">✦ STAGE 02 / IMAGE MATRIX</div>
+          <div class="sticker sticker-top-right rotate-right badge-warn" id="grid-status-badge">7 ROUNDS TO UNLOCK NEXT</div>
+
+          <div class="captcha-layout">
+            <!-- Main CAPTCHA Card -->
+            <article class="captcha-card panel">
+              <header class="card-topbar">
+                <div class="product-id">
+                  <span class="status-dot pulsing" aria-hidden="true"></span>
+                  <span>Not a Bot Human Check</span>
+                  <span class="round-badge mono" id="round-counter">ROUND 01 / 07</span>
+                </div>
+                <div class="confidence-block" aria-live="polite">
+                  <span class="confidence-label">CONFIDENCE</span>
+                  <strong id="confidence-value" class="stat-number">97<span>%</span></strong>
+                </div>
+              </header>
+
+              <div class="verification-progress">
+                <div class="progress-track"><span id="progress-fill"></span></div>
+              </div>
+
+              <div class="prompt-block">
+                <div class="prompt-eyebrow mono">QUERY DIRECTIVE</div>
+                <h2 id="instruction" class="instruction-heading" aria-live="polite">Select all images with traffic lights.</h2>
+                <p class="prompt-subtext">Click every tile that matches. The system is measuring your hesitation.</p>
+              </div>
+
+              <!-- 3x3 Tile Grid -->
+              <div class="tile-grid-container">
+                <div class="tile-grid" id="tile-grid" role="group" aria-label="Image selection grid"></div>
+                <div id="grid-glitch-fx" class="grid-glitch-fx" aria-hidden="true"></div>
+              </div>
+
+              <!-- Action Row -->
+              <div class="action-row">
+                <button id="verify-button" class="btn btn-primary btn-large" type="button">
+                  <span id="verify-btn-text">Verify Selection</span>
+                  <span class="button-arrow" aria-hidden="true">→</span>
+                </button>
+                <button id="robot-button" class="btn btn-ghost" type="button">
+                  I might be a robot 🤖
+                </button>
+              </div>
+
+              <!-- Reply Box & Hints -->
+              <div id="reply-box" class="reply-box" role="status" aria-live="polite">
+                <span class="reply-icon" aria-hidden="true">ℹ</span>
+                <span id="reply-text">Select matching tiles and choose Verify.</span>
+              </div>
+              <p id="hint-line" class="hint-line mono">Complete all 7 rounds to unlock Chapter 03: Text Trial.</p>
+
+              <footer class="card-footer mono">
+                <span><span class="lock-glyph" aria-hidden="true">▣</span> SECURE HANDSHAKE</span>
+                <span>NOT A BOT SEC.SYS v4.9</span>
+              </footer>
+            </article>
+
+            <!-- Live Monospace Terminal Log Panel -->
+            <aside class="log-panel panel">
+              <div class="log-header">
+                <div>
+                  <p class="mono log-overline">INTERNAL MONOLOGUE</p>
+                  <h3 id="log-heading">System Log</h3>
+                </div>
+                <span class="live-badge"><span class="badge-dot"></span> LIVE REASONING</span>
+              </div>
+              <div id="log-list" class="log-list" role="log" aria-live="polite" aria-relevant="additions"></div>
+              <div class="log-footer mono">
+                <span>SESSION <b id="session-id">VN-••••</b></span>
+                <button id="log-clear-btn" class="text-link" type="button">Clear log</button>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 3: TEXT VERIFICATION TRIAL ("TYPE A PULSE")
+           ============================================== -->
+      <section class="slide-panel slide-text-verify" id="slide-2" aria-label="Chapter 3: Text Verification Trial">
+        <div class="slide-card paper-texture text-trial-card">
+          <div class="sticker sticker-top-left rotate-left badge-warn">✦ STAGE 03 / KEYSTROKE AUDIT</div>
+          <div class="sticker sticker-top-right rotate-right badge-alert" id="text-status-sticker">TYPE TO UNLOCK CH. 04</div>
+
+          <div class="section-heading">
+            <span class="mono eyebrow">BIOLOGICAL PROOF PHASE 02</span>
+            <h2>Text Verification Trial</h2>
+            <p>Bots type without emotion. Real humans hesitate, make typos, and question their sanity. Transcribe the phrase below.</p>
+          </div>
+
+          <div class="text-trial-container">
+            <!-- Target Prompt Display -->
+            <div class="target-prompt-box">
+              <span class="mono label">TRANSCRIBE EXACTLY (CASE SENSITIVE):</span>
+              <div class="target-phrase-wrap">
+                <div id="target-phrase" class="target-phrase mono">I promise I have never plugged myself into a wall socket</div>
+                <button id="new-phrase-btn" class="btn btn-small btn-ghost" type="button" title="Get a harder phrase">↻ Alternate Phrase</button>
+              </div>
+            </div>
+
+            <!-- Typing Input Area -->
+            <div class="typing-input-area">
+              <label for="text-verify-input" class="sr-only">Type the verification phrase</label>
+              <input id="text-verify-input" class="typing-input mono" type="text" placeholder="Type here with warm human fingers..." autocomplete="off" spellcheck="false">
+              <div class="input-glow" id="input-glow"></div>
+            </div>
+
+            <!-- Live Keystroke Telemetry -->
+            <div class="keystroke-telemetry">
+              <div class="telemetry-pill">
+                <span class="label mono">ACCURACY:</span>
+                <strong id="typing-accuracy">0%</strong>
+              </div>
+              <div class="telemetry-pill">
+                <span class="label mono">TYPING SPEED:</span>
+                <strong id="typing-wpm">0 WPM</strong>
+              </div>
+              <div class="telemetry-pill">
+                <span class="label mono">NERVOUS HESITATION:</span>
+                <strong id="typing-hesitation">WAITING...</strong>
+              </div>
+            </div>
+
+            <!-- Annoying Autocorrect / Judge Feedback -->
+            <div id="text-feedback-box" class="feedback-bubble">
+              <span class="bubble-speaker">AI Proctor:</span>
+              <span id="text-feedback-text">Awaiting your first keystroke. Don't be robotic.</span>
+            </div>
+
+            <div class="text-trial-actions">
+              <button id="submit-text-btn" class="btn btn-primary btn-large" type="button">
+                <span>Submit Keystrokes for Examination</span>
+                <span class="btn-arrow" aria-hidden="true">→</span>
+              </button>
+              <button id="type-cheat-btn" class="btn btn-secondary" type="button">
+                <span>"Type it for me"</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 4: THE "CLICK ONE MORE TIME" GAUNTLET
+           ============================================== -->
+      <section class="slide-panel slide-one-more" id="slide-3" aria-label="Chapter 4: The One More Time Machine">
+        <div class="slide-card paper-texture one-more-card">
+          <div class="sticker sticker-top-left rotate-left badge-highlight">✦ STAGE 04 / PERSISTENCE</div>
+          <div class="sticker sticker-top-right rotate-right badge-alert" id="click-status-sticker">RECURSIVE TEST</div>
+
+          <div class="section-heading text-center">
+            <span class="mono eyebrow">THE HYPER-REDUNDANT CONFIRMATION STATION</span>
+            <h2>The "One More Time" Verification</h2>
+            <p>You want to verify? Great. Now verify again. And again. And just once more to unlock Chapter 05.</p>
+          </div>
+
+          <div class="infinite-button-arena">
+            <!-- Escalation Speech Bubble -->
+            <div class="machine-dialogue" id="machine-dialogue">
+              <div class="dialogue-tail" aria-hidden="true"></div>
+              <span class="dialogue-icon">🤖</span>
+              <strong id="machine-speech">Click the button below to start verifying your intention.</strong>
+            </div>
+
+            <!-- The Ridiculous Big Button -->
+            <div class="button-stage" id="button-stage">
+              <button id="hyper-verify-btn" class="hyper-verify-btn" type="button">
+                <span class="btn-glow" aria-hidden="true"></span>
+                <span class="btn-label" id="hyper-btn-label">CLICK TO VERIFY</span>
+                <span class="btn-subtext" id="hyper-btn-sub">Click 1 of 6</span>
+              </button>
+            </div>
+
+            <!-- Verification Progress Bar that asymptoticly approaches 100% -->
+            <div class="asymptote-meter">
+              <div class="meter-info mono">
+                <span>VERIFICATION COMPLETION</span>
+                <strong id="hyper-pct-val">0.00%</strong>
+              </div>
+              <div class="meter-track-large">
+                <div class="meter-fill-large" id="hyper-meter-fill"></div>
+              </div>
+            </div>
+
+            <!-- Side Actions -->
+            <div class="more-verify-row">
+              <button id="infinite-more-btn" class="btn btn-secondary" type="button">
+                <span>I WANT TO VERIFY EVEN MORE! ➕</span>
+              </button>
+              <div class="click-streak-badge mono">
+                TOTAL TAPS: <strong id="total-taps-val">0</strong>
+              </div>
+              <button id="calm-machine-btn" class="btn btn-ghost" type="button">
+                <span>Tell Machine It's Safe</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 5: THE BUREAU OF VIBES & UNRELIABLE LAB
+           ============================================== -->
+      <section class="slide-panel slide-vibe-lab" id="slide-4" aria-label="Chapter 5: Bureau of Vibes">
+        <div class="slide-card paper-texture lab-card">
+          <div class="sticker sticker-top-left rotate-right badge-warn">✦ STAGE 05 / BUREAUCRACY</div>
+          <div class="sticker sticker-top-right rotate-left badge-alert" id="vibe-status-sticker">RUN AUDIT TO UNLOCK CH. 06</div>
+
+          <div class="section-heading">
+            <span class="mono eyebrow">DEPARTMENT OF EMOTIONAL INFRASTRUCTURE</span>
+            <h2>The Supplemental Vibe Laboratory</h2>
+            <p>To qualify for Final Judgment, you must test our completely fabricated instruments and register your aura.</p>
+          </div>
+
+          <div class="lab-grid">
+            <!-- Instrument 1: Vibe Radar -->
+            <article class="utility-card panel audit-card">
+              <div class="utility-topline mono">
+                <span>01 / RADAR SWEEP</span>
+                <span id="audit-count">AUDITS 00</span>
+              </div>
+              <div class="audit-content">
+                <div id="radar-orbit" class="radar-orbit" aria-hidden="true">
+                  <span class="radar-dot"></span>
+                  <span class="radar-crosshair">+</span>
+                  <span class="radar-sweep"></span>
+                </div>
+                <div class="audit-copy">
+                  <span class="utility-label">SPECTRAL RESULT</span>
+                  <strong id="vibe-result">Waiting for an unnecessary reading.</strong>
+                  <p>Passive scan of biological aura and desktop vibration.</p>
+                </div>
+              </div>
+              <button id="vibe-audit-button" class="btn btn-primary btn-full" type="button">
+                <span>Run Vibe Audit</span><span aria-hidden="true"> ✳</span>
+              </button>
+            </article>
+
+            <!-- Instrument 2: Recalibration & Appeals -->
+            <article class="utility-card panel desk-card">
+              <div class="utility-topline mono">
+                <span>02 / ADMINISTRATIVE DESK</span>
+                <span class="desk-stamp">OPEN-ish</span>
+              </div>
+              <div class="desk-numbers">
+                <div><strong id="recalibration-count">00</strong><span>RECALIBRATIONS</span></div>
+                <div><strong id="appeal-count">00</strong><span>APPEALS FILED</span></div>
+              </div>
+              <p id="desk-result" class="desk-result">All departments are currently pretending to coordinate.</p>
+              <div class="desk-actions">
+                <button id="recalibrate-button" class="btn btn-secondary" type="button">Recalibrate nothing</button>
+                <button id="appeal-button" class="btn btn-ghost" type="button">Appeal reality</button>
+              </div>
+              <div class="appeal-ticket mono">
+                <span>QUEUE POSITION:</span>
+                <strong id="appeal-queue">—</strong>
+              </div>
+            </article>
+
+            <!-- Instrument 3: Telemetry Vibe Pressure -->
+            <article class="utility-card panel telemetry-card">
+              <div class="utility-topline mono">
+                <span>03 / ATMOSPHERE</span>
+                <span id="forecast-tag">NOMINAL</span>
+              </div>
+              <div class="telemetry-content">
+                <div id="forecast-orb" class="forecast-orb" aria-hidden="true">
+                  <span id="forecast-symbol">☀</span>
+                  <i></i><i></i>
+                </div>
+                <div class="forecast-copy">
+                  <span class="utility-label">CONDITIONS IN SERVER RACK</span>
+                  <strong id="forecast-title">Calm, with paperwork.</strong>
+                  <p id="forecast-description">Signal quality is within tolerable absurdity.</p>
+                </div>
+              </div>
+              <div class="telemetry-meter">
+                <div class="meter-caption mono">
+                  <span>VIBE PRESSURE</span>
+                  <strong id="vibe-pressure">0.97 hPa</strong>
+                </div>
+                <div class="meter-track"><span id="vibe-pressure-fill"></span></div>
+              </div>
+              <!-- Panic Disco Button -->
+              <button id="panic-switch-btn" class="btn btn-danger btn-full" type="button">
+                <span>⚠️ DO NOT FLIP PANIC LEVER</span>
+              </button>
+            </article>
+          </div>
+
+          <div class="lab-advance-banner" id="lab-advance-banner" hidden>
+            <div class="advance-inner">
+              <span>✓ Lab calibration satisfied! You are now qualified for Final Judgment.</span>
+              <button id="lab-proceed-btn" class="btn btn-primary btn-large" type="button">
+                <span>Proceed to Final Judgment</span>
+                <span class="btn-arrow" aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 6: FINAL JUDGMENT (CERTIFICATE OR REJECTION)
+           ============================================== -->
+      <section class="slide-panel slide-certificate" id="slide-5" aria-label="Chapter 6: Final Judgment">
+        <div class="slide-card paper-texture cert-wrapper-card">
+          
+          <!-- VERDICT A: THE OFFICIAL CERTIFICATE (EARNED!) -->
+          <div id="certificate-view" class="judgment-view certificate-view">
+            <div class="section-heading text-center">
+              <span class="mono eyebrow">HONORARY CONCLUSION · VERDICT: PASSED</span>
+              <h2>Certificate of Proven Humanity</h2>
+              <p>Against all probability and statistical doubt, you have exhibited sufficient biological flaws to earn this certificate.</p>
+            </div>
+
+            <article id="certificate" class="certificate panel">
+              <div class="certificate-frame">
+                <!-- Interactive Stamp Placement Layer -->
+                <div id="stamp-target-layer" class="stamp-target-layer" aria-hidden="true"></div>
+
+                <div class="certificate-ornament" aria-hidden="true"><span>N</span></div>
+                <div id="certificate-caption" class="certificate-overline mono">NOT A BOT OFFICIAL RECORD</div>
+                <h1 id="certificate-title">Certificate of<br><em>Proven Humanity</em></h1>
+                <div class="certificate-rule"><span>✦</span></div>
+                <p class="certificate-issued">This record is formally and reluctantly issued to:</p>
+                
+                <label class="sr-only" for="recipient-name">Recipient Name</label>
+                <input id="recipient-name" class="recipient-input" type="text" maxlength="36" value="Human of Earth" autocomplete="name">
+                <p id="issued-to-line" class="issued-to-line">Declared mortal and biological in full standing.</p>
+                
+                <p id="certificate-body" class="certificate-body">
+                  This certifies that the above party is human, probably, after an exhausting multi-stage verification process that got completely away from everyone involved.
+                </p>
+
+                <div class="certificate-stats">
+                  <div><span class="mono">CONFIDENCE AT ISSUE</span><strong id="issue-confidence">38%</strong></div>
+                  <div><span class="mono">CHAPTERS SURVIVED</span><strong id="rounds-survived">6 / 6</strong></div>
+                  <div><span class="mono">CLASSIFICATION</span><strong>ORGANIC</strong></div>
+                </div>
+
+                <div class="seal" aria-label="Official Not a Bot seal">
+                  <span class="seal-inner">VERIFIED<br><b>ISH</b><br>2026</span>
+                  <span class="seal-star" aria-hidden="true">✦</span>
+                </div>
+
+                <div class="certificate-signoff mono">
+                  <span>Not a Bot Verification Office</span>
+                  <span>FORM VN—H/07 • EARTH REGISTRY</span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Rubber Stamp Toolbox (Updated stamps: Human of Earth, Breathes Oxygen, etc.) -->
+            <div class="stamp-toolbox">
+              <span class="mono tool-label">SELECT A STAMP, THEN CLICK ANYWHERE ON THE CERTIFICATE:</span>
+              <div class="stamp-buttons">
+                <button class="stamp-btn active" data-stamp="HUMAN OF EARTH 🌍" type="button">🌍 "HUMAN OF EARTH"</button>
+                <button class="stamp-btn" data-stamp="BREATHES OXYGEN 🫁" type="button">🫁 "BREATHES OXYGEN"</button>
+                <button class="stamp-btn" data-stamp="FLESH & BONE 🦴" type="button">🦴 "FLESH & BONE"</button>
+                <button class="stamp-btn" data-stamp="100% MAMMAL 🐒" type="button">🐒 "100% MAMMAL"</button>
+                <button class="stamp-btn" data-stamp="VERIFIED-ISH 🔏" type="button">🔏 "VERIFIED-ISH"</button>
+                <button class="stamp-btn" data-stamp="NOT A TOASTER 🍞" type="button">🍞 "NOT A TOASTER"</button>
+              </div>
+            </div>
+
+            <!-- Download and Reset Actions -->
+            <div class="ending-actions">
+              <button id="download-button" class="btn btn-primary btn-large" type="button">
+                <span>Download Official PNG</span><span aria-hidden="true"> ↓</span>
+              </button>
+              <button id="confetti-btn" class="btn btn-secondary" type="button">
+                <span>More Confetti! 🎉</span>
+              </button>
+              <button id="toggle-rejection-btn" class="btn btn-ghost" type="button" title="See what happens when you fail">
+                Inspect Rejection Verdict
+              </button>
+              <button id="certificate-reset" class="btn btn-ghost" type="button">
+                Reset & Try Again
+              </button>
+            </div>
+          </div>
+
+          <!-- VERDICT B: REJECTION / AUDIT FAILED (NO CERTIFICATE FOR YOU!) -->
+          <div id="rejection-view" class="judgment-view rejection-view" hidden>
+            <article class="rejection-card panel">
+              <div class="rejection-badge-icon" aria-hidden="true">⛔</div>
+              <p class="mono rejection-code">NOT A BOT // FINAL ADJUDICATION: REJECTED</p>
+              <h2>APPLICATION FOR HUMANITY: DENIED</h2>
+              <div class="rejection-rule"></div>
+              
+              <div class="rejection-box">
+                <div class="rejection-reason-row">
+                  <span class="mono label">OFFICIAL REASON:</span>
+                  <strong>Excessive algorithmic precision detected.</strong>
+                </div>
+                <div class="rejection-reason-row">
+                  <span class="mono label">SYSTEM CONFIDENCE:</span>
+                  <strong class="text-danger" id="rejection-confidence-val">9%</strong>
+                </div>
+                <div class="rejection-reason-row">
+                  <span class="mono label">STATUS:</span>
+                  <span>Unconfirmed biological entity. No certificate can be granted under Section 404 of reality.</span>
+                </div>
+              </div>
+
+              <p class="rejection-copy">
+                The system has determined that you are either an automated Python script pretending to have feelings, or a human who clicks boxes with unnerving, machine-like obedience.
+              </p>
+
+              <div class="rejection-actions">
+                <button id="rejection-appeal-btn" class="btn btn-secondary" type="button">
+                  File Urgent Reality Appeal 📄
+                </button>
+                <button id="rejection-pass-btn" class="btn btn-ghost" type="button">
+                  Bribe Server for Certificate 🤫
+                </button>
+                <button id="rejection-retry-btn" class="btn btn-danger btn-large" type="button">
+                  Re-take Verification From Start
+                </button>
+              </div>
+              <div class="rejection-footer mono">CERTIFICATE WITHHELD BY ORDER OF THE ALGORITHM</div>
+            </article>
+          </div>
+
+          <!-- VERDICT C: ROBOT LOCKOUT CRYPT -->
+          <div id="lockout-view" class="judgment-view lockout-view" hidden>
+            <article class="lockout-card panel">
+              <div class="lockout-signal" aria-hidden="true"><span>!</span></div>
+              <p class="mono lockout-code">VN / SECURITY EXCEPTION / 0xROBOT</p>
+              <h2 id="lockout-title">SYSTEM COULD NOT VERIFY ITSELF</h2>
+              <div class="lockout-rule"></div>
+              <p id="lockout-copy" class="lockout-copy">
+                You admitted you might be a robot. Consequently, Not a Bot attempted to verify its own humanity, panicked, and experienced recursive existential dread.
+              </p>
+              <p id="ticket-line" class="ticket-line mono">Support ticket #HU-4040 opened with the Department of Emotional Infrastructure.</p>
+              <div class="lockout-actions">
+                <button id="lockout-reset" class="btn btn-danger btn-large" type="button">
+                  <span>Try Being Human Again →</span>
+                </button>
+                <button id="lockout-back-btn" class="btn btn-secondary" type="button">
+                  Return to Judgment
+                </button>
+              </div>
+              <div class="lockout-footer mono">PLEASE REMAIN CALM. NOT A BOT IS NOT.</div>
+            </article>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Sticky Bottom Controls & Breadcrumb -->
+  <footer class="app-footer mono">
+    <div class="footer-left">
+      <span class="status-indicator-dot"></span>
+      <span id="footer-gating-status">CHAPTER 1: INTAKE ACTIVE (COMPLETE TO UNLOCK NEXT)</span>
+      <span class="separator">•</span>
+      <button id="cheat-unlock-all" class="subtle-link" type="button">[Dev Bypass: Unlock All Tabs]</button>
+    </div>
+    <div class="footer-right">
+      <span id="slide-indicator">CHAPTER 1 OF 6</span>
+      <span class="separator">•</span>
+      <span>NOT A BOT 2026</span>
+    </div>
+  </footer>
+
+</body>
+</html>
